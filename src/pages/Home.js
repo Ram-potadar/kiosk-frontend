@@ -4,8 +4,9 @@ export default function Home({ onChoose, onRegister }) {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>🖨️ Kiosk Printing</h1>
-        <p style={styles.subtitle}>Welcome! Please choose an option below.</p>
+        <h1 style={styles.title}>🖨️ Print by printing online </h1>
+        <p style={styles.subtitle}>Welcome! Please choose an option below.    </p>
+
 
         <div style={styles.buttonContainer}>
           <button style={{ ...styles.button, backgroundColor: '#4CAF50' }} onClick={() => onChoose('kiosk')}>
