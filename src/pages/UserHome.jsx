@@ -72,6 +72,9 @@ export default function UserHome({ onLogout }) {
               style={{ width: "100%", borderRadius: "10px" }}
               onError={handleError}
               onScan={handleScan}
+              constraints={{
+                  video: { facingMode: { exact: "environment" } }
+              }}
             />
             <button
               style={{
