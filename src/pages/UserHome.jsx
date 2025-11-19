@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { QrReader } from "react-qr-reader";
+import QrScanner from "react-qr-scanner";
 import { useNavigate } from "react-router-dom";
 
 export default function UserHome({ onLogout }) {
@@ -7,21 +7,30 @@ export default function UserHome({ onLogout }) {
   const [scanResult, setScanResult] = useState("");
   const navigate = useNavigate();
 
-  const handleScanResult = (result) => {
-    if (!result) return;
+  const handleScan = (result) => {
+    if (result) {
+      const scannedText = result.text;
+      setScanResult(scannedText);
+      setScanning(false);
 
-    const scannedText = result.text;
-    setScanResult(scannedText);
-    setScanning(false);
+    //   console.log("✅ Scanned QR:", scannedText);
 
-    // If QR contains URL → go directly
-    if (scannedText.startsWith("http")) {
-      window.location.href = scannedText;
+      // Example: scannedText might be a kiosk URL or JSON with kioskId
+      // Case 1: If your QR contains kiosk URL like https://yourapp.com/upload?kioskId=123
+      if (scannedText.startsWith("http")) {
+        // Redirect to that URL
+        window.location.href = scannedText;
+      } 
+      // Case 2: If your QR only contains kioskId
+      else {
+        alert(`Scanned QR: ${scannedText}`);
+        navigate(`/connect?kioskId=${encodeURIComponent(scannedText)}`);
+      }
     }
-    // If QR contains only kioskId → navigate
-    else {
-      navigate(`/connect?kioskId=${encodeURIComponent(scannedText)}`);
-    }
+  };
+
+  const handleError = (err) => {
+    console.error("QR Scan Error:", err);
   };
 
   return (
@@ -32,7 +41,7 @@ export default function UserHome({ onLogout }) {
         {!scanning ? (
           <>
             <p style={styles.subtitle}>
-              Welcome! Scan the QR code displayed on your kiosk machine.
+              Welcome! To start printing, please scan the QR code shown on your kiosk machine.
             </p>
 
             <div style={styles.actions}>
@@ -46,35 +55,24 @@ export default function UserHome({ onLogout }) {
             </div>
 
             <p style={styles.note}>
-              Camera permission is required to scan QR codes.
+              Make sure your camera permission is enabled when scanning.
             </p>
 
             {scanResult && (
               <p style={{ marginTop: 20, color: "green" }}>
-                ✅ Scanned: {scanResult}
+                ✅ Scanned Result: {scanResult}
               </p>
             )}
           </>
         ) : (
           <div>
             <h3 style={{ marginBottom: "10px" }}>📸 Scanning...</h3>
-
-            <QrReader
-              constraints={{ facingMode: "environment" }}  // rear/back camera
-              onResult={(result, error) => {
-                if (result) handleScanResult(result);
-                if (error) console.log(error);
-              }}
-              containerStyle={{
-                width: "100%",
-                borderRadius: "10px",
-                overflow: "hidden",
-              }}
-              videoStyle={{
-                width: "100%",
-              }}
+            <QrScanner
+              delay={300}
+              style={{ width: "100%", borderRadius: "10px" }}
+              onError={handleError}
+              onScan={handleScan}
             />
-
             <button
               style={{
                 ...styles.logoutBtn,
@@ -91,8 +89,6 @@ export default function UserHome({ onLogout }) {
     </div>
   );
 }
-
-// ------------------------- STYLES --------------------------
 
 const styles = {
   container: {
