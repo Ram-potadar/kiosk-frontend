@@ -4,7 +4,7 @@ export default function Home({ onChoose, onRegister }) {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>🖨️ Print by printing online </h1>
+        <h1 style={styles.title}>🖨️ Welcome to Kiosk Print </h1>
         <p style={styles.subtitle}>Welcome! Please choose an option below.    </p>
 
 
