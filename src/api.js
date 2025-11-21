@@ -3,7 +3,7 @@ import axios from "axios";
 
 // point this to your backend URL
 const API = axios.create({
-  baseURL: "http://localhost:4000",
+  baseURL: "https://kiosk-backend-0y2m.onrender.com/",
 });
 
 export default API;
