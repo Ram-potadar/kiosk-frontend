@@ -19,7 +19,7 @@ export default function UserUpload() {
   // Connect to kiosk via QR
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const id = params.get("kiosk");
+    const id = params.get("kioskId");
     if (id) {
       setKioskId(id);
       const socket = io(SOCKET_URL, { transports: ["websocket"] });

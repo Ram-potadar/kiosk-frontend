@@ -3,12 +3,12 @@ import { QRCodeCanvas } from "qrcode.react";
 import { io } from "socket.io-client";
 
 export default function KioskHome() {
-  const kioskId = "KIOSK12345"; // Example ID (unique per kiosk)
+  // const kioskId = "KIOSK12345"; // Example ID (unique per kiosk)
   // const frontendURL = process.env.REACT_APP_FRONTEND_URL || "http://localhost:3000";
   // const socketURL = process.env.REACT_APP_SOCKET_URL || "http://localhost:4000";
 
 
-  // const kioskId = new URLSearchParams(window.location.search).get("kiosk");
+  const kioskId = new URLSearchParams(window.location.search).get("kioskId");
   const frontendURL = process.env.REACT_APP_FRONTEND_URL;
   const socketURL = process.env.REACT_APP_SOCKET_URL;
 
@@ -65,7 +65,7 @@ export default function KioskHome() {
         {!connected && (
           <>
             <QRCodeCanvas
-              value={`${frontendURL}/connect?kiosk=${kioskId}`}
+              value={`${frontendURL}/connect?kioskId=${kioskId}`}
               size={220}
               includeMargin={true}
             />
