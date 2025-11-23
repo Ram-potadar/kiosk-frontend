@@ -3,95 +3,93 @@ import { QRCodeCanvas } from "qrcode.react";
 import { io } from "socket.io-client";
 
 export default function KioskHome() {
-  // const kioskId = "KIOSK12345"; // Example ID (unique per kiosk)
-  // const frontendURL = process.env.REACT_APP_FRONTEND_URL || "http://localhost:3000";
-  // const socketURL = process.env.REACT_APP_SOCKET_URL || "http://localhost:4000";
-
-  // --- at top of KioskHome.jsx (replace current kioskId/frontendURL/socketURL lines) ---
+  // --- Load kioskId from URL or localStorage ---
   const params = new URLSearchParams(window.location.search);
-  let initialKioskId = params.get("kioskId") || localStorage.getItem("kioskId") || null;
+  let initialKioskId = params.get("kioskId") || localStorage.getItem("kioskId");
 
-  // if we got kioskId from query, persist it so kiosk can be opened directly later
-  if (params.get("kioskId") && !localStorage.getItem("kioskId")) {
+  if (params.get("kioskId")) {
     localStorage.setItem("kioskId", params.get("kioskId"));
   }
 
   const kioskId = initialKioskId;
-  const frontendURL = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
-  const socketURL = process.env.REACT_APP_SOCKET_URL || window.location.origin;
+  const frontendURL = process.env.REACT_APP_FRONTEND_URL;
+  const socketURL = process.env.REACT_APP_SOCKET_URL;
 
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState("Waiting for user to scan QR...");
   const [fileInfo, setFileInfo] = useState(null);
   const [printSettings, setPrintSettings] = useState(null);
 
+  // ---------------- SOCKET CONNECTION ----------------
   useEffect(() => {
     if (!kioskId) {
-      setStatus("No kioskId found — please configure kiosk or open with ?kioskId=...");
+      setStatus("❌ No kioskId found");
       return;
     }
 
     const socket = io(socketURL, { transports: ["websocket"] });
 
-    // join the kiosk room once
-    socket.emit("joinKiosk", kioskId);
+    // ✅ Correct event name (backend expects join_kiosk)
+    socket.emit("join_kiosk", kioskId);
 
+    // When user connects
     socket.on("userConnectedMessage", (msg) => {
-      setStatus("📲 " + msg + " — Please upload your file from your phone!");
       setConnected(true);
+      setStatus("📲 " + msg);
     });
 
+    // When file uploaded
     socket.on("fileReceived", (data) => {
       setFileInfo(data);
-      setStatus(`📤 File received: ${data.filename || "Uploaded File"}`);
+      setStatus(`📤 File received: ${data.filename}`);
     });
 
+    // When print request comes
     socket.on("printFile", (settings) => {
       setPrintSettings(settings);
-      setStatus(`🖨️ Printing ${data?.filename || "file"} (${settings.copies} copies, ${settings.color})`);
+      setStatus(
+        `🖨️ Printing ${fileInfo?.filename || "file"} (${settings.copies} copies, ${settings.color})`
+      );
     });
 
+    // After printing completes
     socket.on("printStatus", (msg) => {
       setStatus(`✅ ${msg.status}`);
       setFileInfo(null);
       setPrintSettings(null);
-      setConnected(true);
     });
 
-    return () => {
-      socket.disconnect();
-    };
-    // NOTE: only re-run effect if kioskId or socketURL changes
-}, [kioskId, socketURL]);
+    return () => socket.disconnect();
+  }, [kioskId, socketURL]);
 
+  // ---------------- UI ----------------
   return (
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>🖨️ Kiosk Dashboard</h1>
         <p style={styles.subtitle}>{status}</p>
 
-        {/* Show QR only when no user connected */}
-        {!connected && (
+        {/* QR code only when idle */}
+        {!connected && kioskId && (
           <>
             <QRCodeCanvas
               value={`${frontendURL}/connect?kioskId=${kioskId}`}
               size={220}
-              includeMargin={true}
             />
             <p style={styles.footer}>Kiosk ID: {kioskId}</p>
           </>
         )}
 
-        {/* Show file info if received */}
+        {/* File info */}
         {fileInfo && (
           <div style={styles.fileBox}>
             <h3>📄 File Received</h3>
             <p><strong>{fileInfo.filename}</strong></p>
-            <p>Size: {fileInfo?.size ? `${(fileInfo.size / 1024).toFixed(2)} KB` : "Unknown"}</p> 
+            <p>Size: {fileInfo.size ? (fileInfo.size / 1024).toFixed(2) + " KB" : "Unknown"}</p>
           </div>
         )}
 
-        {/* Show print settings if received */}
+        {/* Print settings */}
         {printSettings && (
           <div style={styles.printBox}>
             <h3>🖨️ Print Settings</h3>
@@ -111,7 +109,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     background: "linear-gradient(135deg, #74ABE2, #5563DE)",
-    fontFamily: "Segoe UI, Roboto, sans-serif",
+    fontFamily: "Segoe UI",
   },
   card: {
     backgroundColor: "white",
