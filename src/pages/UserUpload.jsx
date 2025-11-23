@@ -26,8 +26,9 @@ export default function UserUpload() {
       socket.emit("userConnected", id);
       console.log("User connected to kiosk:", id);
       socket.on("userConnectedMessage", (msg) => console.log(msg));
-
       return () => socket.disconnect();
+    } else {
+      setMsg("⚠️ No kioskId in URL. Scan the QR code again.");
     }
   }, []);
 

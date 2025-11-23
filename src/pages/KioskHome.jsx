@@ -7,11 +7,18 @@ export default function KioskHome() {
   // const frontendURL = process.env.REACT_APP_FRONTEND_URL || "http://localhost:3000";
   // const socketURL = process.env.REACT_APP_SOCKET_URL || "http://localhost:4000";
 
+  // --- at top of KioskHome.jsx (replace current kioskId/frontendURL/socketURL lines) ---
+  const params = new URLSearchParams(window.location.search);
+  let initialKioskId = params.get("kioskId") || localStorage.getItem("kioskId") || null;
 
-  const kioskId = new URLSearchParams(window.location.search).get("kioskId");
-  const frontendURL = process.env.REACT_APP_FRONTEND_URL;
-  const socketURL = process.env.REACT_APP_SOCKET_URL;
+  // if we got kioskId from query, persist it so kiosk can be opened directly later
+  if (params.get("kioskId") && !localStorage.getItem("kioskId")) {
+    localStorage.setItem("kioskId", params.get("kioskId"));
+  }
 
+  const kioskId = initialKioskId;
+  const frontendURL = process.env.REACT_APP_FRONTEND_URL || window.location.origin;
+  const socketURL = process.env.REACT_APP_SOCKET_URL || window.location.origin;
 
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState("Waiting for user to scan QR...");
@@ -19,41 +26,43 @@ export default function KioskHome() {
   const [printSettings, setPrintSettings] = useState(null);
 
   useEffect(() => {
+    if (!kioskId) {
+      setStatus("No kioskId found — please configure kiosk or open with ?kioskId=...");
+      return;
+    }
+
     const socket = io(socketURL, { transports: ["websocket"] });
 
-    // join the kiosk room
+    // join the kiosk room once
     socket.emit("joinKiosk", kioskId);
 
-    // listen for user connection event
     socket.on("userConnectedMessage", (msg) => {
       setStatus("📲 " + msg + " — Please upload your file from your phone!");
-      setConnected(true); // hide QR once connected
+      setConnected(true);
     });
 
-    // listen for file received
     socket.on("fileReceived", (data) => {
       setFileInfo(data);
       setStatus(`📤 File received: ${data.filename || "Uploaded File"}`);
     });
 
-    // listen for print settings from user
     socket.on("printFile", (settings) => {
       setPrintSettings(settings);
-      setStatus(`🖨️ Printing ${fileInfo?.filename || "file"} (${settings.copies} copies, ${settings.color})`);
-      // Here you can trigger actual printing logic if needed
+      setStatus(`🖨️ Printing ${data?.filename || "file"} (${settings.copies} copies, ${settings.color})`);
     });
 
-    // optional: listen for print status confirmation
     socket.on("printStatus", (msg) => {
       setStatus(`✅ ${msg.status}`);
-      // Reset after printing completed
       setFileInfo(null);
       setPrintSettings(null);
-      setConnected(true); // still connected to allow next file
+      setConnected(true);
     });
 
-    return () => socket.disconnect();
-  }, [kioskId, fileInfo]);
+    return () => {
+      socket.disconnect();
+    };
+    // NOTE: only re-run effect if kioskId or socketURL changes
+}, [kioskId, socketURL]);
 
   return (
     <div style={styles.container}>
@@ -78,7 +87,7 @@ export default function KioskHome() {
           <div style={styles.fileBox}>
             <h3>📄 File Received</h3>
             <p><strong>{fileInfo.filename}</strong></p>
-            <p>Size: {(fileInfo.size / 1024).toFixed(2)} KB</p>
+            <p>Size: {fileInfo?.size ? `${(fileInfo.size / 1024).toFixed(2)} KB` : "Unknown"}</p> 
           </div>
         )}
 
