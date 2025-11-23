@@ -33,7 +33,7 @@ export default function KioskHome() {
     // listen for file received
     socket.on("fileReceived", (data) => {
       setFileInfo(data);
-      setStatus(`📤 File received: ${data.filename}`);
+      setStatus(`📤 File received: ${data.filename || "Uploaded File"}`);
     });
 
     // listen for print settings from user

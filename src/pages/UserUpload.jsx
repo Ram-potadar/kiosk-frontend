@@ -24,7 +24,7 @@ export default function UserUpload() {
       setKioskId(id);
       const socket = io(SOCKET_URL, { transports: ["websocket"] });
       socket.emit("userConnected", id);
-
+      console.log("User connected to kiosk:", id);
       socket.on("userConnectedMessage", (msg) => console.log(msg));
 
       return () => socket.disconnect();
