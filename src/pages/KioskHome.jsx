@@ -3,17 +3,9 @@ import { QRCodeCanvas } from "qrcode.react";
 import { io } from "socket.io-client";
 
 export default function KioskHome() {
-  // --- Load kioskId from URL or localStorage ---
-  const params = new URLSearchParams(window.location.search);
-  let initialKioskId = params.get("kioskId") || localStorage.getItem("kioskId");
-
-  if (params.get("kioskId")) {
-    localStorage.setItem("kioskId", params.get("kioskId"));
-  }
-
-  const kioskId = initialKioskId;
-  const frontendURL = process.env.REACT_APP_FRONTEND_URL;
-  const socketURL = process.env.REACT_APP_SOCKET_URL;
+  const kioskId = "KIOSK12345"; // Example ID (unique per kiosk)
+  const frontendURL = process.env.REACT_APP_FRONTEND_URL || "http://localhost:3000";
+  const socketURL = process.env.REACT_APP_SOCKET_URL || "http://localhost:4000";
 
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState("Waiting for user to scan QR...");
